@@ -57,3 +57,8 @@
 2025-04-10, 03:18:50, 127.0.0.1, Non disponible, Non disponible
 2025-04-10, 03:18:50, 127.0.0.1, {'latitude': 48.865112, 'longitude': 2.154209}, {'city': 'Rueil-Malmaison', 'region': 'Île-de-France', 'country': 'France (la)', 'postal': '92500'}, action: visite_avec_gps
 2025-04-10, 03:18:50, 127.0.0.1, Non disponible, {'city': 'Garches', 'region': 'Île-de-France', 'country': 'France', 'postal': '92380'}, action: visite_index
+2025-04-10, 03:42:54, 127.0.0.1, Non disponible, {'city': 'Garches', 'region': 'Île-de-France', 'country': 'France', 'postal': '92380'}, action: visite_sans_gps
+2025-04-10, 03:42:54, 127.0.0.1, Non disponible, {'city': 'Garches', 'region': 'Île-de-France', 'country': 'France', 'postal': '92380'}, action: transfer_page_visit_without_gps
+2025-04-10, 03:42:57, 127.0.0.1, Non disponible, Non disponible, action: accès page transfert
+2025-04-10, 03:42:58, 127.0.0.1, Non disponible, {'city': 'Garches', 'region': 'Île-de-France', 'country': 'France', 'postal': '92380'}, action: visite_sans_gps
+2025-04-10, 03:42:58, 127.0.0.1, Non disponible, {'city': 'Garches', 'region': 'Île-de-France', 'country': 'France', 'postal': '92380'}, action: transfer_page_visit_without_gps
