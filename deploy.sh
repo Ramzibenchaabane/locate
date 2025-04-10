@@ -72,7 +72,7 @@ python3 -m venv $VENV_DIR
 $VENV_DIR/bin/pip install --upgrade pip
 $VENV_DIR/bin/pip install flask gunicorn
 
-# Configuration du service systemd
+# Configuration du service systemd avec un port TCP au lieu d'un socket Unix
 log "Configuration du service systemd..."
 cat > /etc/systemd/system/synergia-bank.service << EOF
 [Unit]
@@ -84,7 +84,7 @@ User=$USER
 Group=www-data
 WorkingDirectory=$APP_DIR
 Environment="PATH=$VENV_DIR/bin"
-ExecStart=$VENV_DIR/bin/gunicorn --workers 3 --bind unix:$APP_DIR/synergia-bank.sock -m 007 app:app
+ExecStart=$VENV_DIR/bin/gunicorn --workers 3 --bind 127.0.0.1:8000 app:app
 
 [Install]
 WantedBy=multi-user.target
@@ -105,7 +105,7 @@ server {
 
     location / {
         include proxy_params;
-        proxy_pass http://unix:$APP_DIR/synergia-bank.sock;
+        proxy_pass http://127.0.0.1:8000;
         
         # Ajout des en-têtes pour transmettre l'IP réelle du client
         proxy_set_header X-Real-IP \$remote_addr;
@@ -176,7 +176,14 @@ log "Configuration du renouvellement automatique du certificat..."
 
 # Vérifier que l'application fonctionne
 log "Vérification du déploiement..."
-systemctl status synergia-bank --no-pager
+sleep 5  # Attendre que les services démarrent complètement
+curl -s http://localhost:8000 > /dev/null
+if [ $? -eq 0 ]; then
+    log "L'application fonctionne correctement!"
+else
+    warning "Impossible de contacter l'application localement. Vérification des logs..."
+    journalctl -u synergia-bank -n 20
+fi
 
 # Afficher les informations finales
 log "=================================================================="
@@ -188,18 +195,4 @@ log "Pour vérifier les logs de l'application:"
 log "  sudo journalctl -u synergia-bank.service"
 log "Pour vérifier les logs de Nginx:"
 log "  sudo tail -f /var/log/nginx/error.log"
-log "=================================================================="
-log "NOTE IMPORTANTE: Assurez-vous que dans votre code app.py,"
-log "vous utilisez une fonction get_client_ip() qui récupère l'IP"
-log "à partir des en-têtes X-Forwarded-For ou X-Real-IP."
-log "Exemple de fonction à ajouter dans app.py:"
-log ""
-log "def get_client_ip():"
-log "    if request.headers.get('X-Forwarded-For'):"
-log "        client_ip = request.headers.get('X-Forwarded-For').split(',')[0].strip()"
-log "    elif request.headers.get('X-Real-IP'):"
-log "        client_ip = request.headers.get('X-Real-IP')"
-log "    else:"
-log "        client_ip = request.remote_addr"
-log "    return client_ip"
 log "=================================================================="
