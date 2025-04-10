@@ -1,0 +1,441 @@
+/* Variables */
+:root {
+    --primary-color: #0e2944;
+    --secondary-color: #1a3a5f;
+    --accent-color: #e74c3c;
+    --light-color: #f8f9fa;
+    --dark-color: #212529;
+    --font-family: 'Arial', sans-serif;
+}
+
+/* Reset et styles de base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-family);
+    line-height: 1.6;
+    color: var(--dark-color);
+    background-color: var(--light-color);
+}
+
+/* Header et navigation */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 5%;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+}
+
+.logo {
+    width: 200px;
+    height: 71px;
+    margin-right: 1rem;
+}
+
+.logo-text h1 {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin: 0;
+}
+
+.logo-text h2 {
+    font-size: 1rem;
+    color: var(--secondary-color);
+    margin: 0;
+}
+
+nav ul {
+    display: flex;
+    list-style: none;
+}
+
+nav ul li {
+    margin-left: 2rem;
+}
+
+nav ul li a {
+    text-decoration: none;
+    color: var(--dark-color);
+    font-weight: 500;
+    transition: color 0.3s;
+}
+
+nav ul li a:hover, nav ul li a.active {
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--primary-color);
+}
+
+/* Section principale */
+main {
+    min-height: calc(100vh - 200px);
+}
+
+/* Mise à jour de la section du héros pour le carrousel à droite */
+.hero-section {
+    display: flex;
+    padding: 3rem 5%;
+    background-color: #f5f5f5;
+    align-items: flex-start;
+    gap: 2rem;
+}
+
+.hero-content {
+    flex: 1;
+}
+
+.hero-carousel {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.hero-title {
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+}
+
+.hero-subtitle {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+    color: var(--secondary-color);
+}
+
+.hero-image {
+    flex: 1;
+    background: url('/static/img/banker.jpg') no-repeat center center;
+    background-size: cover;
+    min-height: 500px;
+}
+
+/* Boutons */
+.banking-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.button {
+    display: inline-block;
+    padding: 0.8rem 1.5rem;
+    background-color: var(--primary-color);
+    color: white;
+    text-decoration: none;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.button:hover {
+    background-color: var(--secondary-color);
+}
+
+.learn-more {
+    margin-top: 1rem;
+}
+
+/* Page de transfert */
+.transaction-info {
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    margin-top: 2rem;
+}
+
+.transaction-info h2 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.transaction-id {
+    font-size: 1.5rem;
+    font-weight: bold;
+    padding: 1rem;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+}
+
+.transaction-amount {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--accent-color);
+    padding: 0.5rem;
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.cashout {
+    background-color: var(--accent-color);
+    width: 100%;
+    font-size: 1.2rem;
+    padding: 1rem;
+}
+
+.cashout:hover {
+    background-color: #c0392b;
+}
+
+/* Modals */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    overflow-y: auto;
+}
+
+.modal-content {
+    background-color: #fff;
+    margin: 5% auto;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 500px;
+    position: relative;
+    max-height: 85vh;
+    overflow-y: auto;
+}
+
+.close {
+    position: absolute;
+    top: 1rem;
+    right: 1.5rem;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+/* Formulaire */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.form-group small {
+    display: block;
+    margin-top: 0.3rem;
+    color: #666;
+    font-size: 0.8rem;
+    font-style: italic;
+}
+
+/* Loading Modal */
+.loading-content {
+    text-align: center;
+    padding: 3rem;
+}
+
+.loader {
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid var(--primary-color);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 2s linear infinite;
+    margin: 0 auto 2rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Carousel - Banner */
+.carousel-container {
+    position: relative;
+    width: 100%;
+    height: 500px;
+    overflow: hidden;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.carousel-slide {
+    display: none;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    transition: all 0.5s ease;
+}
+
+.carousel-slide.active {
+    display: block;
+}
+
+.carousel-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.carousel-caption {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 0.8rem;
+    text-align: center;
+}
+
+.carousel-caption h2 {
+    margin: 0;
+    font-size: 1.4rem;
+}
+
+.carousel-caption p {
+    margin: 0.3rem 0 0;
+    font-size: 1rem;
+}
+
+.carousel-controls {
+    position: absolute;
+    top: 50%;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    transform: translateY(-50%);
+}
+
+.carousel-control {
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 1.5rem;
+    cursor: pointer;
+    margin: 0 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.carousel-control:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    padding: 2rem;
+    background-color: var(--primary-color);
+    color: white;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    header {
+        flex-direction: column;
+        padding: 1rem;
+    }
+    
+    nav ul {
+        margin-top: 1rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    nav ul li {
+        margin: 0.5rem;
+    }
+    
+    .hero-section {
+        flex-direction: column;
+    }
+    
+    .hero-content {
+        width: 100%;
+        margin-bottom: 2rem;
+    }
+    
+    .hero-carousel {
+        width: 100%;
+    }
+    
+    .carousel-container {
+        height: 250px;
+    }
+    
+    .hero-title {
+        font-size: 2.5rem;
+    }
+    
+    .banking-options {
+        flex-direction: column;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 10% auto;
+    }
+}
+
+/* Nouveaux styles à ajouter à style.css */
+
+.transaction-message {
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+    color: var(--primary-color);
+    font-weight: bold;
+    text-align: center;
+}
+
+.verification-form {
+    background-color: #fff;
+    padding: 1.5rem;
+    border-radius: 6px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.08);
+    margin-bottom: 1rem;
+}
+
+.transaction-details {
+    background-color: #fff;
+    padding: 1.5rem;
+    border-radius: 6px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.08);
+}
+
+#transaction-number {
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+    text-align: center;
+}

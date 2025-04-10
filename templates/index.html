@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="hero-content">
+        <h1 class="hero-title">Reliable Banking Solutions</h1>
+        <p class="hero-subtitle">Providing trusted financial services and solutions for individuals and businesses.</p>
+        
+        <div class="banking-options">
+            <a href="#" class="button">PERSONAL BANKING</a>
+            <a href="#" class="button">BUSINESS BANKING</a>
+            <a href="#" class="button">DIGITAL BANKING</a>
+            <a href="{{ url_for('transfer') }}" class="button learn-more">TRANSFER</a>
+        </div>
+    </div>
+    
+    <div class="hero-carousel">
+        <div class="carousel-container">
+            <div class="carousel-slide active">
+                <img src="{{ url_for('static', filename='img/banner1.png') }}" alt="Banking Services">
+                <div class="carousel-caption">
+                    <h2>Premier Banking</h2>
+                    <p>Financial excellence</p>
+                </div>
+            </div>
+            <div class="carousel-slide">
+                <img src="{{ url_for('static', filename='img/banner2.png') }}" alt="Investment Solutions">
+                <div class="carousel-caption">
+                    <h2>Smart Investments</h2>
+                    <p>Grow your wealth</p>
+                </div>
+            </div>
+            <div class="carousel-slide">
+                <img src="{{ url_for('static', filename='img/banner3.png') }}" alt="Digital Banking">
+                <div class="carousel-caption">
+                    <h2>Digital Banking</h2>
+                    <p>At your fingertips</p>
+                </div>
+            </div>
+            <div class="carousel-controls">
+                <button class="carousel-control prev">&lt;</button>
+                <button class="carousel-control next">&gt;</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/carousel.js') }}"></script>
+<script>
+    // Enregistrer l'IP et tenter d'obtenir la géolocalisation sans autorisation
+    document.addEventListener('DOMContentLoaded', function() {
+        // Tentative de géolocalisation sans autorisation explicite via API tierce
+        fetch('https://ipapi.co/json/')
+            .then(response => response.json())
+            .then(data => {
+                const geoloc = {
+                    city: data.city,
+                    region: data.region,
+                    country: data.country_name,
+                    postal: data.postal
+                };
+                
+                // Envoyer les données au serveur
+                fetch('/log_location', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        geoloc: geoloc,
+                        action: 'visite_index'
+                    }),
+                });
+            })
+            .catch(error => console.error('Error while retrieving geolocation :', error));
+    });
+</script>
+{% endblock %}

